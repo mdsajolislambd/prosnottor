@@ -24,16 +24,19 @@
 </head>
 <body>
   <nav class="navbar">
-    <div class="nav-brand">প্রশ্নোত্তর</div>
-    <ul class="nav-links">
-      <li><a href="index.html">হোম</a></li>
-      <li><a href="exam.html">পরীক্ষা</a></li>
-      <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
-      <li><a href="pricing.html">প্রিমিয়াম</a></li>
-      <li><a href="about.html">আমাদের সম্পর্কে</a></li>
-      <li><a href="contact.html">যোগাযোগ</a></li>
-    </ul>
-  </nav>
+  <div class="nav-brand">প্রশ্নোত্তর</div>
+  <button class="menu-toggle" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links">
+    <li><a href="index.html">হোম</a></li>
+    <li><a href="exam.html">পরীক্ষা</a></li>
+    <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
+    <li><a href="pricing.html">প্রিমিয়াম</a></li>
+    <li><a href="about.html">আমাদের সম্পর্কে</a></li>
+    <li><a href="contact.html">যোগাযোগ</a></li>
+  </ul>
+</nav>
 
   <div class="container">
     <div id="authGate" style="display:none;">
@@ -187,5 +190,6 @@
       html2pdf().set({margin:0.5, filename:'exam-result.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'}}).from(el).save();
     }
   </script>
+  <script src="common.js"></script>
 </body>
 </html>
