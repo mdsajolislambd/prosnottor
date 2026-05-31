@@ -1,49 +1,122 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8"><title>প্রিমিয়াম প্ল্যান - প্রশ্নোত্তর</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>প্রিমিয়াম প্ল্যান - প্রশ্নোত্তর</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <nav class="navbar"><div class="nav-brand">প্রশ্নোত্তর</div></nav>
-  <div class="container">
+  <nav class="navbar">
+    <div class="nav-brand">প্রশ্নোত্তর</div>
+    <button class="menu-toggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">হোম</a></li>
+      <li><a href="exam.html">পরীক্ষা</a></li>
+      <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
+      <li><a href="pricing.html">প্রিমিয়াম</a></li>
+      <li><a href="about.html">আমাদের সম্পর্কে</a></li>
+      <li><a href="contact.html">যোগাযোগ</a></li>
+    </ul>
+  </nav>
+
+  <div class="container" style="max-width:700px; margin-top:40px;">
     <h2 class="text-center">প্রিমিয়াম সাবস্ক্রিপশন</h2>
-    <div style="display:flex; gap:20px; justify-content:center; margin-top:40px;">
-      <div class="card text-center" style="flex:1;">
-        <h3>মাসিক</h3>
-        <p style="font-size:2rem; color:var(--gold);">৳১০০</p>
-        <button onclick="subscribe('monthly',100)" class="btn-primary" style="margin-top:20px;">সাবস্ক্রাইব</button>
+    <p class="text-center" style="color:var(--text-muted); margin-bottom:30px;">নিচের যেকোনো মাধ্যমে পেমেন্ট করে ট্রানজেকশন আইডি সাবমিট করুন। ২৪ ঘন্টার মধ্যে আপনার একাউন্ট অ্যাক্টিভেট করা হবে।</p>
+
+    <div class="flex-grid">
+      <div class="card text-center">
+        <h3>📱 bKash</h3>
+        <p style="font-size:2rem; color:var(--gold-light);">017XXXXXXXX</p>
+        <p style="color:var(--text-muted);">সেন্ড মানি ব্যবহার করুন</p>
       </div>
-      <div class="card text-center" style="flex:1;">
-        <h3>বার্ষিক</h3>
-        <p style="font-size:2rem; color:var(--gold);">৳৮০০</p>
-        <button onclick="subscribe('yearly',800)" class="btn-primary" style="margin-top:20px;">সাবস্ক্রাইব</button>
+      <div class="card text-center">
+        <h3>📱 Nagad</h3>
+        <p style="font-size:2rem; color:var(--gold-light);">017XXXXXXXX</p>
+        <p style="color:var(--text-muted);">সেন্ড মানি ব্যবহার করুন</p>
       </div>
     </div>
+
+    <div class="card mt-4">
+      <h3>সাবস্ক্রিপশন ফর্ম</h3>
+      <p style="color:var(--text-muted);">পেমেন্ট সম্পন্ন হলে নিচের তথ্য দিন।</p>
+      <div id="loginMessage" style="display:none;" class="mt-4">
+        <p>দয়া করে প্রথমে <a href="login.html">লগইন</a> করুন।</p>
+      </div>
+      <form id="subscriptionForm" style="display:none;">
+        <select id="plan" required style="width:100%; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; color:var(--text); margin-top:12px;">
+          <option value="monthly">মাসিক - ৳১০০</option>
+          <option value="yearly">বার্ষিক - ৳৮০০</option>
+        </select>
+        <input type="text" id="transactionId" placeholder="ট্রানজেকশন আইডি (যেমন: TXN123456)" required style="margin-top:12px;">
+        <input type="text" id="paymentMethod" placeholder="পেমেন্ট মেথড (bKash/Nagad)" required style="margin-top:12px;">
+        <button type="submit" class="btn-primary w-full mt-4">সাবমিট করুন</button>
+      </form>
+      <p id="successMessage" style="display:none; color:var(--success); margin-top:12px;">✅ আপনার আবেদন জমা হয়েছে। অ্যাক্টিভেট হলে ইমেইল পাবেন।</p>
+      <p id="errorMessage" style="display:none; color:var(--danger); margin-top:12px;"></p>
+    </div>
   </div>
+
+  <footer><p>© ২০২৬ প্রশ্নোত্তর। সর্বস্বত্ব সংরক্ষিত।</p></footer>
+
+  <script src="common.js" defer></script>
   <script>
     const SUPABASE_URL = 'https://your-project.supabase.co';
     const SUPABASE_ANON_KEY = 'your-anon-key';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    async function subscribe(plan, amount){
-      const {data:{session}} = await supabase.auth.getSession();
-      if(!session){ window.location.href='login.html'; return; }
-      const user = session.user;
-      const res = await fetch('/api/payment', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          user_id:user.id, plan, amount,
-          cus_name: user.user_metadata?.full_name || 'User',
-          cus_email: user.email,
-          cus_phone:'01700000000'
-        })
-      });
-      const data = await res.json();
-      if(data.paymentUrl) window.location.href = data.paymentUrl;
-      else alert('পেমেন্ট শুরু করতে সমস্যা হয়েছে।');
-    }
+
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        document.getElementById('loginMessage').style.display = 'block';
+        return;
+      }
+      document.getElementById('subscriptionForm').style.display = 'block';
+    })();
+
+    document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('errorMessage').textContent = 'আপনাকে লগইন করতে হবে।';
+        return;
+      }
+
+      const plan = document.getElementById('plan').value;
+      const transactionId = document.getElementById('transactionId').value.trim();
+      const paymentMethod = document.getElementById('paymentMethod').value.trim();
+
+      if (!transactionId || !paymentMethod) {
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('errorMessage').textContent = 'সব তথ্য পূরণ করুন।';
+        return;
+      }
+
+      const { error } = await supabase
+        .from('subscriptions')
+        .upsert({
+          user_id: session.user.id,
+          plan,
+          status: 'pending',
+          transaction_id: transactionId,
+          payment_method: paymentMethod,
+          amount: plan === 'monthly' ? 100 : 800,
+          created_at: new Date()
+        }, { onConflict: 'user_id' });
+
+      if (error) {
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('errorMessage').textContent = 'সাবমিট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+        return;
+      }
+
+      document.getElementById('subscriptionForm').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'block';
+    });
   </script>
 </body>
 </html>
