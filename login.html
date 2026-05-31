@@ -29,18 +29,35 @@
       <p class="mt-4">একাউন্ট নেই? <a href="signup.html">সাইন আপ করুন</a></p>
     </div>
   </div>
-  <script>
-    const SUPABASE_URL = 'https://your-project.supabase.co';
-    const SUPABASE_ANON_KEY = 'your-anon-key';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    async function login(){
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { data, error } = await supabase.auth.signInWithPassword({email, password});
-      if(error){ alert(error.message); return; }
-      window.location.href = 'exam.html';
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Supabase client
+  const SUPABASE_URL = 'https://your-project.supabase.co';
+  const SUPABASE_ANON_KEY = 'your-anon-key';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Mobile menu toggle (no external file needed)
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    if (toggleBtn && navLinks) {
+      toggleBtn.addEventListener('click', function() {
+        navLinks.classList.toggle('active');
+      });
     }
-  </script>
-  <script src="common.js" defer></script>
+  });
+
+  // Login function
+  async function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    window.location.href = 'exam.html';
+  }
+</script>
 </body>
 </html>
