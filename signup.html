@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8"><title>সাইন আপ - প্রশ্নোত্তর</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <nav class="navbar"><div class="nav-brand">প্রশ্নোত্তর</div></nav>
+  <div class="container" style="max-width:400px; margin-top:60px;">
+    <div class="card text-center">
+      <h2>সাইন আপ</h2>
+      <input type="text" id="name" placeholder="পূর্ণ নাম" class="mt-4"><br>
+      <input type="email" id="email" placeholder="ইমেইল" class="mt-4"><br>
+      <input type="password" id="password" placeholder="পাসওয়ার্ড" class="mt-4"><br>
+      <button onclick="signup()" class="btn-primary" style="width:100%; margin-top:20px;">সাইন আপ</button>
+      <p class="mt-4">ইতিমধ্যে একাউন্ট আছে? <a href="login.html">লগইন</a></p>
+    </div>
+  </div>
+  <script>
+    const SUPABASE_URL = 'https://your-project.supabase.co';
+    const SUPABASE_ANON_KEY = 'your-anon-key';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    async function signup(){
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { data, error } = await supabase.auth.signUp({email, password, options:{data:{full_name:name}}});
+      if(error){ alert(error.message); return; }
+      alert('সাইন আপ সফল! ইমেইল ভেরিফাই করুন।');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
