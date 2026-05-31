@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8"><title>প্রিমিয়াম প্ল্যান - প্রশ্নোত্তর</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <nav class="navbar"><div class="nav-brand">প্রশ্নোত্তর</div></nav>
+  <div class="container">
+    <h2 class="text-center">প্রিমিয়াম সাবস্ক্রিপশন</h2>
+    <div style="display:flex; gap:20px; justify-content:center; margin-top:40px;">
+      <div class="card text-center" style="flex:1;">
+        <h3>মাসিক</h3>
+        <p style="font-size:2rem; color:var(--gold);">৳১০০</p>
+        <button onclick="subscribe('monthly',100)" class="btn-primary" style="margin-top:20px;">সাবস্ক্রাইব</button>
+      </div>
+      <div class="card text-center" style="flex:1;">
+        <h3>বার্ষিক</h3>
+        <p style="font-size:2rem; color:var(--gold);">৳৮০০</p>
+        <button onclick="subscribe('yearly',800)" class="btn-primary" style="margin-top:20px;">সাবস্ক্রাইব</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const SUPABASE_URL = 'https://your-project.supabase.co';
+    const SUPABASE_ANON_KEY = 'your-anon-key';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    async function subscribe(plan, amount){
+      const {data:{session}} = await supabase.auth.getSession();
+      if(!session){ window.location.href='login.html'; return; }
+      const user = session.user;
+      const res = await fetch('/api/payment', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          user_id:user.id, plan, amount,
+          cus_name: user.user_metadata?.full_name || 'User',
+          cus_email: user.email,
+          cus_phone:'01700000000'
+        })
+      });
+      const data = await res.json();
+      if(data.paymentUrl) window.location.href = data.paymentUrl;
+      else alert('পেমেন্ট শুরু করতে সমস্যা হয়েছে।');
+    }
+  </script>
+</body>
+</html>
