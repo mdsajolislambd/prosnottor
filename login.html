@@ -6,7 +6,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <nav class="navbar"><div class="nav-brand">প্রশ্নোত্তর</div></nav>
+  <nav class="navbar">
+  <div class="nav-brand">প্রশ্নোত্তর</div>
+  <button class="menu-toggle" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links">
+    <li><a href="index.html">হোম</a></li>
+    <li><a href="exam.html">পরীক্ষা</a></li>
+    <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
+    <li><a href="pricing.html">প্রিমিয়াম</a></li>
+    <li><a href="about.html">আমাদের সম্পর্কে</a></li>
+    <li><a href="contact.html">যোগাযোগ</a></li>
+  </ul>
+</nav>
   <div class="container" style="max-width:400px; margin-top:60px;">
     <div class="card text-center">
       <h2>লগইন</h2>
@@ -28,5 +41,6 @@
       window.location.href = 'exam.html';
     }
   </script>
+  <script src="common.js"></script>
 </body>
 </html>
