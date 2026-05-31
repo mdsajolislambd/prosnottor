@@ -4,37 +4,35 @@
   <meta charset="UTF-8">
   <title>লিডারবোর্ড - প্রশ্নোত্তর</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <nav class="navbar">
-    <div class="nav-brand">📚 প্রশ্নোত্তর</div>
+    <div class="nav-brand">প্রশ্নোত্তর</div>
     <ul class="nav-links">
       <li><a href="index.html">হোম</a></li>
       <li><a href="exam.html">পরীক্ষা</a></li>
       <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
+      <li><a href="pricing.html">প্রিমিয়াম</a></li>
       <li><a href="about.html">আমাদের সম্পর্কে</a></li>
       <li><a href="contact.html">যোগাযোগ</a></li>
     </ul>
   </nav>
-
-  <div style="max-width:800px; margin:30px auto; padding:20px; background:white; border-radius:16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-    <h2>🏆 লিডারবোর্ড</h2>
-    <div id="leaderboardList">লোড হচ্ছে...</div>
+  <div class="container">
+    <div class="card text-center">
+      <h2>🏆 লিডারবোর্ড</h2>
+      <div id="leaderboardList" style="text-align:left; margin-top:20px;">লোড হচ্ছে...</div>
+    </div>
   </div>
-
   <script>
     const SUPABASE_URL = 'https://your-project.supabase.co';
     const SUPABASE_ANON_KEY = 'your-anon-key';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function loadLeaderboard() {
-      const { data, error } = await supabaseClient.from('leaderboard').select('*').order('score', { ascending: false }).limit(20);
-      if (error) { console.error(error); return; }
-      document.getElementById('leaderboardList').innerHTML = data.map((e,i) => `<p>${i+1}. ${e.player_name} — ${e.score} (${e.category})</p>`).join('');
-    }
-    loadLeaderboard();
+    (async ()=>{
+      const { data, error } = await supabaseClient.from('leaderboard').select('*').order('score',{ascending:false}).limit(20);
+      if(error){ console.error(error); return; }
+      document.getElementById('leaderboardList').innerHTML = data.map((e,i)=>`<p style="padding:12px; border-bottom:1px solid var(--border);">${i+1}. <strong>${e.player_name}</strong> — ${e.score} (${e.category})</p>`).join('');
+    })();
   </script>
 </body>
 </html>
