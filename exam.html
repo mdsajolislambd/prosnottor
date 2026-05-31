@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>লাইভ পরীক্ষা - প্রশ্নোত্তর</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .container { max-width: 800px; margin: 30px auto; padding: 20px; background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .timer { font-size: 2rem; font-weight: 700; color: #3b82f6; }
+    .option { display: flex; align-items: center; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 40px; cursor: pointer; margin: 8px 0; }
+    .option.selected { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .btn { background: #3b82f6; color: white; padding: 14px 30px; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
+    .correct { color: #10b981; }
+    .wrong { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">📚 প্রশ্নোত্তর</div>
+    <ul class="nav-links">
+      <li><a href="index.html">হোম</a></li>
+      <li><a href="exam.html">পরীক্ষা</a></li>
+      <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
+      <li><a href="about.html">আমাদের সম্পর্কে</a></li>
+      <li><a href="contact.html">যোগাযোগ</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="header">
+      <h1>প্রশ্নোত্তর লাইভ পরীক্ষা</h1>
+      <div class="timer" id="timerDisplay">60:00</div>
+      <div style="margin-top:15px; display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
+        <label>বিষয়: 
+          <select id="categorySelect" onchange="loadQuestions()">
+            <option value="">সকল প্রশ্ন</option>
+          </select>
+        </label>
+        <label>আপনার নাম: <input type="text" id="playerName" placeholder="নাম লিখুন" style="padding:8px; border-radius:20px; border:1px solid #ccc;"></label>
+      </div>
+    </div>
+
+    <div id="questionsContainer"></div>
+    <button class="btn" id="submitBtn">পরীক্ষা শেষ করুন</button>
+
+    <div id="resultContainer" style="display:none;">
+      <h2>ফলাফল</h2>
+      <p>সঠিক: <span id="correctCount">0</span> | ভুল: <span id="wrongCount">0</span> | বাদ: <span id="skippedCount">0</span></p>
+      <p>মোট নম্বর: <strong id="finalScore">0.00</strong></p>
+      <div id="detailedResult"></div>
+      <button class="btn" onclick="downloadPDF()">📥 পিডিএফ ডাউনলোড</button>
+      <button class="btn" onclick="location.reload()">আবার পরীক্ষা দিন</button>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://gdqeryiyqypgnwdohtpz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcWVyeWl5cXlwZ253ZG9odHB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0OTczMTQsImV4cCI6MjA5NTA3MzMxNH0.w1RpfTaL6d0DgQzoOZSTRHsY0Zlyey-DFx8LtCgT6m0';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let questions = [], answers = {}, timer, timeLeft = 60 * 60;
+
+    // Load categories into dropdown
+    async function loadCategories() {
+      const { data, error } = await supabaseClient.from('questions').select('category');
+      if (error) return;
+      const categories = new Set();
+      data.forEach(row => {
+        row.category.split(',').forEach(cat => categories.add(cat.trim()));
+      });
+      const select = document.getElementById('categorySelect');
+      categories.forEach(cat => { const o = document.createElement('option'); o.value = cat; o.textContent = cat; select.appendChild(o); });
+    }
+
+    async function loadQuestions() {
+      const category = document.getElementById('categorySelect').value;
+      let query = supabaseClient.from('questions').select('*');
+      if (category) query = query.ilike('category', `%${category}%`);
+      const { data, error } = await query;
+      if (error) { alert('প্রশ্ন লোড করতে সমস্যা হয়েছে'); return; }
+      questions = data.sort(() => Math.random() - 0.5).slice(0, 75);
+      renderQuestions();
+      startTimer();
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questionsContainer');
+      container.innerHTML = questions.map((q, idx) => `
+        <div style="margin-bottom:20px;">
+          <h3>${idx+1}. ${q.title}</h3>
+          <div>${JSON.parse(q.options).map((opt, i) => {
+            const letter = String.fromCharCode(65 + i);
+            return `<div class="option" data-qid="${q.id}" data-value="${letter}" onclick="selectAnswer(${q.id}, '${letter}', this)">
+              <span style="font-weight:700;margin-right:12px;">${letter})</span> ${opt}
+            </div>`;
+          }).join('')}</div>
+        </div>
+      `).join('');
+    }
+
+    window.selectAnswer = function(qId, value, element) {
+      document.querySelectorAll(`.option[data-qid="${qId}"]`).forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+      answers[qId] = value;
+    };
+
+    function startTimer() {
+      timer = setInterval(() => {
+        if (timeLeft <= 0) { clearInterval(timer); submitExam(); return; }
+        timeLeft--;
+        const mins = Math.floor(timeLeft / 60), secs = timeLeft % 60;
+        document.getElementById('timerDisplay').textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+      }, 1000);
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', () => {
+      if (confirm('পরীক্ষা শেষ করতে চান?')) { clearInterval(timer); submitExam(); }
+    });
+
+    async function submitExam() {
+      document.getElementById('submitBtn').disabled = true;
+      let correct = 0, wrong = 0, skipped = 0;
+      let resultHtml = '';
+      questions.forEach((q, idx) => {
+        const userAns = answers[q.id];
+        const isCorrect = (userAns === q.correct_answer);
+        if (userAns === undefined) skipped++;
+        else if (isCorrect) correct++;
+        else wrong++;
+        const correctOpt = JSON.parse(q.options)[q.correct_answer.charCodeAt(0) - 65];
+        resultHtml += `<div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+          <strong>${idx+1}. ${q.title}</strong><br>
+          আপনার উত্তর: <span class="${isCorrect ? 'correct' : 'wrong'}">${userAns || 'দেওয়া হয়নি'}</span>
+          ${!isCorrect ? ` | সঠিক: <span class="correct">${q.correct_answer}. ${correctOpt}</span>` : ''}
+          ${q.explanation ? `<br><small>${q.explanation}</small>` : ''}
+        </div>`;
+      });
+
+      const score = correct - (wrong * 0.25);
+      document.getElementById('correctCount').textContent = correct;
+      document.getElementById('wrongCount').textContent = wrong;
+      document.getElementById('skippedCount').textContent = skipped;
+      document.getElementById('finalScore').textContent = score.toFixed(2);
+      document.getElementById('detailedResult').innerHTML = resultHtml;
+      document.getElementById('questionsContainer').style.display = 'none';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('resultContainer').style.display = 'block';
+
+      // Submit to leaderboard
+      const player = document.getElementById('playerName').value.trim() || 'Anonymous';
+      const category = document.getElementById('categorySelect').value || 'all';
+      await supabaseClient.from('leaderboard').insert({ player_name: player, score, category });
+    }
+
+    function downloadPDF() {
+      const element = document.getElementById('detailedResult');
+      html2pdf().set({
+        margin: 0.5,
+        filename: 'exam-result.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      }).from(element).save();
+    }
+
+    // Initialize
+    loadCategories();
+    loadQuestions();
+  </script>
+</body>
+</html>
