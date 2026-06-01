@@ -69,13 +69,15 @@
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        document.getElementById('loginMessage').style.display = 'block';
-        return;
-      }
-      document.getElementById('subscriptionForm').style.display = 'block';
-    })();
+  // Wait a tiny bit for Supabase to fully initialize
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    document.getElementById('loginMessage').style.display = 'block';
+    return;
+  }
+  document.getElementById('subscriptionForm').style.display = 'block';
+})();
 
     document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
       e.preventDefault();
