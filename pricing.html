@@ -62,26 +62,53 @@
 
   <footer><p>© ২০২৬ প্রশ্নোত্তর। সর্বস্বত্ব সংরক্ষিত।</p></footer>
 
-  <script src="common.js" defer></script>
+  <!-- Mobile menu -->
+  <script>
+    (function() {
+      const toggleBtn = document.querySelector('.menu-toggle');
+      const navLinks = document.querySelector('.nav-links');
+      if (toggleBtn && navLinks) {
+        toggleBtn.addEventListener('click', function() {
+          navLinks.classList.toggle('active');
+        });
+      }
+    })();
+  </script>
+
+  <!-- Pricing logic -->
   <script>
     const SUPABASE_URL = 'https://gdqeryiyqypgnwdohtpz.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcWVyeWl5cXlwZ253ZG9odHB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0OTczMTQsImV4cCI6MjA5NTA3MzMxNH0.w1RpfTaL6d0DgQzoOZSTRHsY0Zlyey-DFx8LtCgT6m0';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const pricingClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    (async () => {
-  // Wait a tiny bit for Supabase to fully initialize
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    document.getElementById('loginMessage').style.display = 'block';
-    return;
-  }
-  document.getElementById('subscriptionForm').style.display = 'block';
-})();
+    // Wait for session to be ready
+    async function checkSessionAndShowForm() {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const { data: { session } } = await pricingClient.auth.getSession();
+      if (session) {
+        document.getElementById('subscriptionForm').style.display = 'block';
+        document.getElementById('loginMessage').style.display = 'none';
+      } else {
+        document.getElementById('loginMessage').style.display = 'block';
+        document.getElementById('subscriptionForm').style.display = 'none';
+      }
+    }
+    checkSessionAndShowForm();
+
+    // Listen for future auth changes
+    pricingClient.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        document.getElementById('subscriptionForm').style.display = 'block';
+        document.getElementById('loginMessage').style.display = 'none';
+      } else {
+        document.getElementById('loginMessage').style.display = 'block';
+        document.getElementById('subscriptionForm').style.display = 'none';
+      }
+    });
 
     document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await pricingClient.auth.getSession();
       if (!session) {
         document.getElementById('errorMessage').style.display = 'block';
         document.getElementById('errorMessage').textContent = 'আপনাকে লগইন করতে হবে।';
@@ -98,7 +125,7 @@
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await pricingClient
         .from('subscriptions')
         .upsert({
           user_id: session.user.id,
@@ -113,6 +140,7 @@
       if (error) {
         document.getElementById('errorMessage').style.display = 'block';
         document.getElementById('errorMessage').textContent = 'সাবমিট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+        console.error('Subscription upsert error:', error);
         return;
       }
 
