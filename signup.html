@@ -3,10 +3,23 @@
 <head>
   <meta charset="UTF-8"><title>সাইন আপ - প্রশ্নোত্তর</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <nav class="navbar"><div class="nav-brand">প্রশ্নোত্তর</div></nav>
+  <nav class="navbar">
+    <div class="nav-brand">প্রশ্নোত্তর</div>
+    <button class="menu-toggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">হোম</a></li>
+      <li><a href="exam.html">পরীক্ষা</a></li>
+      <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
+      <li><a href="pricing.html">প্রিমিয়াম</a></li>
+      <li><a href="about.html">আমাদের সম্পর্কে</a></li>
+      <li><a href="contact.html">যোগাযোগ</a></li>
+    </ul>
+  </nav>
+
   <div class="container" style="max-width:400px; margin-top:60px;">
     <div class="card text-center">
       <h2>সাইন আপ</h2>
@@ -17,17 +30,42 @@
       <p class="mt-4">ইতিমধ্যে একাউন্ট আছে? <a href="login.html">লগইন</a></p>
     </div>
   </div>
+
+  <!-- Mobile menu script – keep separate -->
   <script>
+    (function() {
+      const toggleBtn = document.querySelector('.menu-toggle');
+      const navLinks = document.querySelector('.nav-links');
+      if (toggleBtn && navLinks) {
+        toggleBtn.addEventListener('click', function() {
+          navLinks.classList.toggle('active');
+        });
+      }
+    })();
+  </script>
+
+  <!-- Supabase client & signup logic – use unique variable name -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ⚠️ Replace with your real Supabase Project URL and anon key
     const SUPABASE_URL = 'https://gdqeryiyqypgnwdohtpz.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcWVyeWl5cXlwZ253ZG9odHB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0OTczMTQsImV4cCI6MjA5NTA3MzMxNH0.w1RpfTaL6d0DgQzoOZSTRHsY0Zlyey-DFx8LtCgT6m0';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    async function signup(){
+    const signupClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function signup() {
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      const { data, error } = await supabase.auth.signUp({email, password, options:{data:{full_name:name}}});
-      if(error){ alert(error.message); return; }
-      alert('সাইন আপ সফল! ইমেইল ভেরিফাই করুন।');
+      const { data, error } = await signupClient.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name } }
+      });
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      alert('সাইন আপ সফল হয়েছে। দয়া করে আপনার ইমেইল ভেরিফাই করুন।');
       window.location.href = 'login.html';
     }
   </script>
