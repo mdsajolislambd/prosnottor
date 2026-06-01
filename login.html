@@ -30,7 +30,7 @@
     </div>
   </div>
 
-  <!-- Mobile menu script – keep separate so it always works -->
+  <!-- Mobile menu -->
   <script>
     (function() {
       const toggleBtn = document.querySelector('.menu-toggle');
@@ -43,20 +43,24 @@
     })();
   </script>
 
-  <!-- Supabase & login logic -->
+  <!-- Supabase & login -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ⚠️ Replace with your real Supabase URL and anon key
+    // ⚠️ Use your exact Supabase credentials here
     const SUPABASE_URL = 'https://gdqeryiyqypgnwdohtpz.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcWVyeWl5cXlwZ253ZG9odHB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0OTczMTQsImV4cCI6MjA5NTA3MzMxNH0.w1RpfTaL6d0DgQzoOZSTRHsY0Zlyey-DFx8LtCgT6m0';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const loginClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function login() {
-      const email = document.getElementById('email').value;
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!email || !password) {
+        alert('ইমেইল ও পাসওয়ার্ড দিন।');
+        return;
+      }
+      const { data, error } = await loginClient.auth.signInWithPassword({ email, password });
       if (error) {
-        alert(error.message);
+        alert('লগইন ব্যর্থ: ' + error.message);
         return;
       }
       window.location.href = 'exam.html';
