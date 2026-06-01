@@ -30,12 +30,12 @@
     <div class="flex-grid">
       <div class="card text-center">
         <h3>📱 bKash</h3>
-        <p style="font-size:2rem; color:var(--gold-light);">017XXXXXXXX</p>
+        <p style="font-size:2rem; color:var(--gold-light);">01736677877</p>
         <p style="color:var(--text-muted);">সেন্ড মানি ব্যবহার করুন</p>
       </div>
       <div class="card text-center">
         <h3>📱 Nagad</h3>
-        <p style="font-size:2rem; color:var(--gold-light);">017XXXXXXXX</p>
+        <p style="font-size:2rem; color:var(--gold-light);">01736677877</p>
         <p style="color:var(--text-muted);">সেন্ড মানি ব্যবহার করুন</p>
       </div>
     </div>
@@ -43,18 +43,21 @@
     <div class="card mt-4">
       <h3>সাবস্ক্রিপশন ফর্ম</h3>
       <p style="color:var(--text-muted);">পেমেন্ট সম্পন্ন হলে নিচের তথ্য দিন।</p>
+      
       <div id="loginMessage" style="display:none;" class="mt-4">
         <p>দয়া করে প্রথমে <a href="login.html">লগইন</a> করুন।</p>
       </div>
+
       <form id="subscriptionForm" style="display:none;">
         <select id="plan" required style="width:100%; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; color:var(--text); margin-top:12px;">
           <option value="monthly">মাসিক - ৳১০০</option>
           <option value="yearly">বার্ষিক - ৳৮০০</option>
         </select>
-        <input type="text" id="transactionId" placeholder="ট্রানজেকশন আইডি (যেমন: TXN123456)" required style="margin-top:12px;">
-        <input type="text" id="paymentMethod" placeholder="পেমেন্ট মেথড (bKash/Nagad)" required style="margin-top:12px;">
+        <input type="text" id="transactionId" placeholder="ট্রানজেকশন আইডি (যেমন: TXN123456)" required style="width:100%; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; color:var(--text); margin-top:12px;">
+        <input type="text" id="paymentMethod" placeholder="পেমেন্ট মেথড (bKash/Nagad)" required style="width:100%; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; color:var(--text); margin-top:12px;">
         <button type="submit" class="btn-primary w-full mt-4">সাবমিট করুন</button>
       </form>
+
       <p id="successMessage" style="display:none; color:var(--success); margin-top:12px;">✅ আপনার আবেদন জমা হয়েছে। অ্যাক্টিভেট হলে ইমেইল পাবেন।</p>
       <p id="errorMessage" style="display:none; color:var(--danger); margin-top:12px;"></p>
     </div>
@@ -62,7 +65,6 @@
 
   <footer><p>© ২০২৬ প্রশ্নোত্তর। সর্বস্বত্ব সংরক্ষিত।</p></footer>
 
-  <!-- Mobile menu -->
   <script>
     (function() {
       const toggleBtn = document.querySelector('.menu-toggle');
@@ -75,43 +77,39 @@
     })();
   </script>
 
-  <!-- Pricing logic -->
   <script>
     const SUPABASE_URL = 'https://gdqeryiyqypgnwdohtpz.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcWVyeWl5cXlwZ253ZG9odHB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0OTczMTQsImV4cCI6MjA5NTA3MzMxNH0.w1RpfTaL6d0DgQzoOZSTRHsY0Zlyey-DFx8LtCgT6m0';
+    
     const pricingClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Wait for session to be ready
-    async function checkSessionAndShowForm() {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      const { data: { session } } = await pricingClient.auth.getSession();
-      if (session) {
-        document.getElementById('subscriptionForm').style.display = 'block';
-        document.getElementById('loginMessage').style.display = 'none';
-      } else {
-        document.getElementById('loginMessage').style.display = 'block';
-        document.getElementById('subscriptionForm').style.display = 'none';
-      }
-    }
-    checkSessionAndShowForm();
+    const subscriptionForm = document.getElementById('subscriptionForm');
+    const loginMessage = document.getElementById('loginMessage');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
 
-    // Listen for future auth changes
+    // Automatically tracks auth initialization and subsequent changes cleanly
     pricingClient.auth.onAuthStateChange((event, session) => {
       if (session) {
-        document.getElementById('subscriptionForm').style.display = 'block';
-        document.getElementById('loginMessage').style.display = 'none';
+        subscriptionForm.style.display = 'block';
+        loginMessage.style.display = 'none';
       } else {
-        document.getElementById('loginMessage').style.display = 'block';
-        document.getElementById('subscriptionForm').style.display = 'none';
+        loginMessage.style.display = 'block';
+        subscriptionForm.style.display = 'none';
       }
     });
 
-    document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
+    subscriptionForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      // Clear previous error messages
+      errorMessage.style.display = 'none';
+      errorMessage.textContent = '';
+
       const { data: { session } } = await pricingClient.auth.getSession();
       if (!session) {
-        document.getElementById('errorMessage').style.display = 'block';
-        document.getElementById('errorMessage').textContent = 'আপনাকে লগইন করতে হবে।';
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = 'আপনাকে লগইন করতে হবে।';
         return;
       }
 
@@ -120,11 +118,12 @@
       const paymentMethod = document.getElementById('paymentMethod').value.trim();
 
       if (!transactionId || !paymentMethod) {
-        document.getElementById('errorMessage').style.display = 'block';
-        document.getElementById('errorMessage').textContent = 'সব তথ্য পূরণ করুন।';
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = 'সব তথ্য পূরণ করুন।';
         return;
       }
 
+      // Upsert call with fixed ISO time string
       const { error } = await pricingClient
         .from('subscriptions')
         .upsert({
@@ -134,18 +133,18 @@
           transaction_id: transactionId,
           payment_method: paymentMethod,
           amount: plan === 'monthly' ? 100 : 800,
-          created_at: new Date()
+          created_at: new Date().toISOString() 
         }, { onConflict: 'user_id' });
 
       if (error) {
-        document.getElementById('errorMessage').style.display = 'block';
-        document.getElementById('errorMessage').textContent = 'সাবমিট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = 'সাবমিট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
         console.error('Subscription upsert error:', error);
         return;
       }
 
-      document.getElementById('subscriptionForm').style.display = 'none';
-      document.getElementById('successMessage').style.display = 'block';
+      subscriptionForm.style.display = 'none';
+      successMessage.style.display = 'block';
     });
   </script>
 </body>
