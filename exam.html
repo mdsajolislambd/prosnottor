@@ -24,28 +24,28 @@
 </head>
 <body>
   <nav class="navbar">
-  <div class="nav-brand">প্রশ্নোত্তর</div>
-  <button class="menu-toggle" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-  <ul class="nav-links">
-    <li><a href="index.html">হোম</a></li>
-    <li><a href="exam.html">পরীক্ষা</a></li>
-    <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
-    <li><a href="pricing.html">প্রিমিয়াম</a></li>
-    <li><a href="about.html">আমাদের সম্পর্কে</a></li>
-    <li><a href="contact.html">যোগাযোগ</a></li>
-  </ul>
-</nav>
+    <div class="nav-brand">প্রশ্নোত্তর</div>
+    <button class="menu-toggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">হোম</a></li>
+      <li><a href="exam.html">পরীক্ষা</a></li>
+      <li><a href="leaderboard.html">লিডারবোর্ড</a></li>
+      <li><a href="pricing.html">প্রিমিয়াম</a></li>
+      <li><a href="about.html">আমাদের সম্পর্কে</a></li>
+      <li><a href="contact.html">যোগাযোগ</a></li>
+    </ul>
+  </nav>
 
-  <div class="container">
-    <div id="authGate" style="display:none;">
-      <div class="card">
-        <h2>অনুগ্রহ করে লগইন করুন</h2>
-        <p>আপনার প্রিমিয়াম একাউন্ট প্রয়োজন।</p>
-        <a href="login.html" class="btn-primary">লগইন</a>
-      </div>
+  <div class="container" style="max-width:800px; margin:30px auto;">
+    <div id="authMessage" style="display:none;" class="card text-center">
+      <h2>অ্যাক্সেস নেই</h2>
+      <p id="authMessageText"></p>
+      <a href="login.html" class="btn-primary" id="loginLink">লগইন</a>
+      <a href="pricing.html" class="btn-primary" id="pricingLink" style="display:none;">সাবস্ক্রাইব করুন</a>
     </div>
+
     <div id="examContent" style="display:none;">
       <div class="card" style="text-align:center;">
         <h1>লাইভ পরীক্ষা</h1>
@@ -74,33 +74,64 @@
     </div>
   </div>
 
+  <!-- Mobile menu -->
+  <script>
+    (function() {
+      const toggleBtn = document.querySelector('.menu-toggle');
+      const navLinks = document.querySelector('.nav-links');
+      if (toggleBtn && navLinks) {
+        toggleBtn.addEventListener('click', function() {
+          navLinks.classList.toggle('active');
+        });
+      }
+    })();
+  </script>
+
+  <!-- Exam logic -->
   <script>
     const SUPABASE_URL = 'https://gdqeryiyqypgnwdohtpz.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcWVyeWl5cXlwZ253ZG9odHB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0OTczMTQsImV4cCI6MjA5NTA3MzMxNH0.w1RpfTaL6d0DgQzoOZSTRHsY0Zlyey-DFx8LtCgT6m0';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const examClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let questions = [], answers = {}, timer, timeLeft = 60 * 60;
 
-    // Authentication & Subscription Guard
-    (async () => {
-      const { data: { session } } = await supabaseClient.auth.getSession();
+    // Auth + subscription guard
+    async function checkAccess() {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const { data: { session } } = await examClient.auth.getSession();
       if (!session) {
-        document.getElementById('authGate').style.display = 'block';
+        document.getElementById('authMessage').style.display = 'block';
+        document.getElementById('authMessageText').textContent = 'আপনাকে প্রথমে লগইন করতে হবে।';
+        document.getElementById('loginLink').style.display = 'inline-block';
+        document.getElementById('pricingLink').style.display = 'none';
         return;
       }
-      const { data: sub } = await supabaseClient.from('subscriptions')
-        .select('*').eq('user_id', session.user.id).eq('status', 'active').maybeSingle();
+
+      // Check subscription
+      const { data: sub } = await examClient
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
       if (!sub || new Date(sub.expires_at) < new Date()) {
-        document.getElementById('authGate').style.display = 'block';
+        document.getElementById('authMessage').style.display = 'block';
+        document.getElementById('authMessageText').textContent = 'আপনার অ্যাক্টিভ সাবস্ক্রিপশন নেই। প্রিমিয়াম প্ল্যান নিন।';
+        document.getElementById('loginLink').style.display = 'none';
+        document.getElementById('pricingLink').style.display = 'inline-block';
         return;
       }
+
+      // All good, show exam
       document.getElementById('examContent').style.display = 'block';
       loadCategories();
       loadQuestions();
-    })();
+    }
+    checkAccess();
 
     async function loadCategories() {
-      const { data, error } = await supabaseClient.from('questions').select('category');
+      const { data, error } = await examClient.from('questions').select('category');
       if (error) return;
       const cats = new Set();
       data.forEach(r => r.category.split(',').forEach(c => cats.add(c.trim())));
@@ -110,7 +141,7 @@
 
     async function loadQuestions() {
       const cat = document.getElementById('categorySelect').value;
-      let q = supabaseClient.from('questions').select('*');
+      let q = examClient.from('questions').select('*');
       if (cat) q = q.ilike('category', `%${cat}%`);
       const { data, error } = await q;
       if (error) { alert('প্রশ্ন লোড করতে সমস্যা হয়েছে'); return; }
@@ -182,7 +213,7 @@
 
       const player = document.getElementById('playerName').value.trim()||'Anonymous';
       const category = document.getElementById('categorySelect').value||'all';
-      await supabaseClient.from('leaderboard').insert({ player_name:player, score, category });
+      await examClient.from('leaderboard').insert({ player_name:player, score, category });
     }
 
     function downloadPDF() {
@@ -190,6 +221,5 @@
       html2pdf().set({margin:0.5, filename:'exam-result.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'}}).from(el).save();
     }
   </script>
-  <script src="common.js"></script>
 </body>
 </html>
